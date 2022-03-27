@@ -1,0 +1,4 @@
+## git ignore shortcut folder
+*.lnk
+*.url
+mbed-os
