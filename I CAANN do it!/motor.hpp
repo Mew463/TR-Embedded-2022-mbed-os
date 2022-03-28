@@ -130,8 +130,6 @@ class Motor {
 
     
         int PIDCalc = kP * error + kI * sumerror[motorID] + kD * ((double)(error - lastError[motorID])/timeDifference);
-        
-        printf("Current: %d \t" , PIDCalc);
 
         int maxcurrent = 1000;
         if (PIDCalc > maxcurrent)
@@ -236,32 +234,7 @@ class Motor {
         static int lastMotorAngle[8] = {0,0,0,0,0,0,0,0};
 
         for (int i = 0; i < 7; i++) {
-            if (abs(staticSpeed(i)) < 0) {
-                if ( staticAngle(i) > (8191 - Threshold) && lastMotorAngle[i] < Threshold)
-                    multiTurnPositionAngle[i] += -(staticAngle(i) - 8191) - lastMotorAngle[i];
-
-                else if (staticAngle(i) < Threshold && lastMotorAngle[i] > (8191 - Threshold))
-                    multiTurnPositionAngle[i] -= -(staticAngle(i) - 8191) - lastMotorAngle[i];
-                else 
-                    multiTurnPositionAngle[i] += staticAngle(i) - lastMotorAngle[i];
-
-            }
-            // else {
-            //     if (staticSpeed(i) > 0) {
-            //         if (staticAngle(i) < lastMotorAngle[i]) //assume it did a full revolution
-            //             multiTurnPositionAngle[i] += -(staticAngle(i) - 8191) - lastMotorAngle[i];
-            //         else
-            //             multiTurnPositionAngle[i] += staticAngle(i) - lastMotorAngle[i];
-            //     }
-            //     else {
-            //         if (staticAngle(i) > lastMotorAngle[i]) 
-            //             multiTurnPositionAngle[i] -= -(staticAngle(i) + 8191) - lastMotorAngle[i];
-            //         else
-            //             multiTurnPositionAngle[i] -= staticAngle(i) - lastMotorAngle[i];
-            //     }
-                    
-            // }
-            else{
+            if (abs(staticSpeed(i)) > 20) {
                 int delta = staticAngle(i) - lastMotorAngle[i]; // 0 to 199 POS// 8000 to 128 NEG
                 if(staticSpeed(i) < 0 && delta > 0){ //neg skip
                     multiTurnPositionAngle[i] += (delta - 8191);
@@ -270,10 +243,10 @@ class Motor {
                 }else { //pos no skip or neg no skip same case
                     multiTurnPositionAngle[i] += delta;
                 }
-                
+
+                lastMotorAngle[i] = staticAngle(i);
             }
 
-            lastMotorAngle[i] = staticAngle(i);
         }
       
     }
