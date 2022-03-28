@@ -96,18 +96,28 @@ class Motor {
         //TODO Throw error when motorNumber isnt within the range [0,7]
     }
 
+    /**
+     * @brief Set the desired current of this motor from -16000 -> 16000
+     * 
+     * @param value
+     */
     void setDesiredCurrent(int value) {
         setDesiredValue(value);
         mode[motorNumber] = CURRENT;
     }
 
+    /**
+     * @brief Set the desired speed of this motor
+     * 
+     * @param value
+     */
     void setDesiredSpeed(int value) {
         setDesiredValue(value);
         mode[motorNumber] = SPEED;
     }
 
     /**
-     * @brief Set the desired position of this motor in degrees
+     * @brief Set the desired position of this motor in degrees from -inf -> inf
      * 
      * @param value
      */
@@ -116,6 +126,83 @@ class Motor {
         mode[motorNumber] = POSITION;
     }
     
+    void zeroPos() {
+        multiTurnPositionAngle[motorNumber] = 0;
+    }
+
+    static void staticZeroPos(int motorID) {
+        multiTurnPositionAngle[motorID] = 0;
+    }
+
+    /**
+     * @brief Returns speed of motor
+     * 
+     * @return int 
+     */
+    int getSpeed(){
+        return feedback[motorNumber][1];
+    }
+
+    static int staticSpeed(int motorID) {
+        return feedback[motorID][1];
+    }
+
+    /**
+     * @brief Returns temperature of motor
+     * 
+     * @return int 
+     */
+    int getTemperature(){
+        return feedback[motorNumber][3];
+    }
+
+    /**
+     * @brief Returns specified data of specified motor
+     * canBuss is a field between 1 and 8, specifing the can bus of the motor
+     * dataNumber is the element of data you want
+     * Angle: 0
+     * Speed: 1
+     * Torque: 2
+     * Temperature: 3
+     * 
+     * @return int 
+     */
+    static int getData(int canBus, int dataNumber){
+        return feedback[canBus -1][dataNumber];
+    }
+
+    /**
+     * @brief Get the desired value of the motor
+     * 
+     * @return int value
+     */
+    int getDesiredValue(){
+        if(motorNumber < 4){
+            return motorOut1[motorNumber];
+        }else if(motorNumber >= 4){
+            return motorOut2[motorNumber-4];
+        }
+        return -1;
+    }
+
+    /**
+     * @brief Returns angle of motor
+     * 
+     * @return int 
+     */
+    int getAngle(){
+        return feedback[motorNumber][0];
+    }
+
+    int getMultiTurnAngle(){
+        return multiTurnPositionAngle[motorNumber];
+    }
+
+    static int staticAngle(int motorID){
+        return feedback[motorID][0];
+    }
+
+
     static int PIDPositionError(int desiredAngle, int motorID) {
         int error = multiTurnPositionAngle[motorID] - desiredAngle;
         static unsigned long lastTime[8] = {0};
@@ -154,21 +241,7 @@ class Motor {
 
         return PIDCalc;
     }
-    
 
-    /**
-     * @brief Get the desired value of the motor
-     * 
-     * @return int value
-     */
-    int getDesiredValue(){
-        if(motorNumber < 4){
-            return motorOut1[motorNumber];
-        }else if(motorNumber >= 4){
-            return motorOut2[motorNumber-4];
-        }
-        return -1;
-    }
 
     /**
      * @brief Prints a CANMessage nicely
@@ -219,23 +292,6 @@ class Motor {
         }
     }
 
-    /**
-     * @brief Returns angle of motor
-     * 
-     * @return int 
-     */
-    int getAngle(){
-        return feedback[motorNumber][0];
-    }
-
-    int getMultiTurnAngle(){
-        return multiTurnPositionAngle[motorNumber];
-    }
-
-    static int staticAngle(int motorID){
-        return feedback[motorID][0];
-    }
-
     static void multiTurnPositionControl() {
         int Threshold = 3000;
 
@@ -267,59 +323,7 @@ class Motor {
       
     }
 
-    void zeroPos() {
-        multiTurnPositionAngle[motorNumber] = 0;
-    }
-
-    static void staticZeroPos(int motorID) {
-        multiTurnPositionAngle[motorID] = 0;
-    }
-
-    /**
-     * @brief Returns speed of motor
-     * 
-     * @return int 
-     */
-    int getSpeed(){
-        return feedback[motorNumber][1];
-    }
-
-    static int staticSpeed(int motorID) {
-        return feedback[motorID][1];
-    }
-
-    /**
-     * @brief Returns torque of motor
-     * 
-     * @return int 
-     */
-    int getTorque(){
-        return feedback[motorNumber][2];
-    }
-
-    /**
-     * @brief Returns temperature of motor
-     * 
-     * @return int 
-     */
-    int getTemperature(){
-        return feedback[motorNumber][3];
-    }
-
-    /**
-     * @brief Returns specified data of specified motor
-     * canBuss is a field between 1 and 8, specifing the can bus of the motor
-     * dataNumber is the element of data you want
-     * Angle: 0
-     * Speed: 1
-     * Torque: 2
-     * Temperature: 3
-     * 
-     * @return int 
-     */
-    static int getData(int canBus, int dataNumber){
-        return feedback[canBus -1][dataNumber];
-    }
+    
 
     /**
      * @brief send all motor values after setting them in setDesiredValues

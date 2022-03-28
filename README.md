@@ -8,4 +8,5 @@
 
 - Tune PID Position Control
 
-- 
+- Instead of two MotorOut Arrays, Make there only one 
+
