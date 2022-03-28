@@ -114,11 +114,11 @@ class Motor {
         static int lastError[8] = {0};
         static int sumerror[8] = {0};
         sumerror[motorID] += error;
-        double kP = .05;
-        double kI = 0.25;
-        double kD = 0;
+        double kP = .1;
+        double kI = 0;
+        double kD = .1;
 
-        if (abs(error) < 2500)
+        if (abs(error) < 5000)
             sumerror[motorID] = 0;
 
         int maxsumerror = 2000;
@@ -131,10 +131,13 @@ class Motor {
     
         int PIDCalc = kP * error + kI * sumerror[motorID] + kD * ((double)(error - lastError[motorID])/timeDifference);
         
-        if (PIDCalc > 1000)
-            PIDCalc = 1000;
-        else if (PIDCalc < -1000)
-            PIDCalc = -1000;
+        printf("Current: %d \t" , PIDCalc);
+
+        int maxcurrent = 1000;
+        if (PIDCalc > maxcurrent)
+            PIDCalc = maxcurrent;
+        else if (PIDCalc < -maxcurrent)
+            PIDCalc = -maxcurrent;
 
         lastTime[motorID] = Time;
         error = lastError[motorID];
@@ -231,14 +234,44 @@ class Motor {
         int Threshold = 3000;
 
         static int lastMotorAngle[8] = {0,0,0,0,0,0,0,0};
-        for (int i = 0; i < 7; i++) {
-            if ( staticAngle(i) > (8191 - Threshold) && lastMotorAngle[i] < Threshold)
-                multiTurnPositionAngle[i] += -(staticAngle(i) - 8191) - lastMotorAngle[i];
 
-            else if (staticAngle(i) < Threshold && lastMotorAngle[i] > (8191 - Threshold))
-                multiTurnPositionAngle[i] -= -(staticAngle(i) - 8191) - lastMotorAngle[i];
-            else 
-                multiTurnPositionAngle[i] += staticAngle(i) - lastMotorAngle[i];
+        for (int i = 0; i < 7; i++) {
+            if (abs(staticSpeed(i)) < 0) {
+                if ( staticAngle(i) > (8191 - Threshold) && lastMotorAngle[i] < Threshold)
+                    multiTurnPositionAngle[i] += -(staticAngle(i) - 8191) - lastMotorAngle[i];
+
+                else if (staticAngle(i) < Threshold && lastMotorAngle[i] > (8191 - Threshold))
+                    multiTurnPositionAngle[i] -= -(staticAngle(i) - 8191) - lastMotorAngle[i];
+                else 
+                    multiTurnPositionAngle[i] += staticAngle(i) - lastMotorAngle[i];
+
+            }
+            // else {
+            //     if (staticSpeed(i) > 0) {
+            //         if (staticAngle(i) < lastMotorAngle[i]) //assume it did a full revolution
+            //             multiTurnPositionAngle[i] += -(staticAngle(i) - 8191) - lastMotorAngle[i];
+            //         else
+            //             multiTurnPositionAngle[i] += staticAngle(i) - lastMotorAngle[i];
+            //     }
+            //     else {
+            //         if (staticAngle(i) > lastMotorAngle[i]) 
+            //             multiTurnPositionAngle[i] -= -(staticAngle(i) + 8191) - lastMotorAngle[i];
+            //         else
+            //             multiTurnPositionAngle[i] -= staticAngle(i) - lastMotorAngle[i];
+            //     }
+                    
+            // }
+            else{
+                int delta = staticAngle(i) - lastMotorAngle[i]; // 0 to 199 POS// 8000 to 128 NEG
+                if(staticSpeed(i) < 0 && delta > 0){ //neg skip
+                    multiTurnPositionAngle[i] += (delta - 8191);
+                }else if(staticSpeed(i) > 0 && delta < 0){ //pos skip
+                    multiTurnPositionAngle[i] += (delta + 8191);
+                }else { //pos no skip or neg no skip same case
+                    multiTurnPositionAngle[i] += delta;
+                }
+                
+            }
 
             lastMotorAngle[i] = staticAngle(i);
         }
@@ -256,6 +289,10 @@ class Motor {
      */
     int getSpeed(){
         return feedback[motorNumber][1];
+    }
+
+    static int staticSpeed(int motorID) {
+        return feedback[motorID][1];
     }
 
     /**
