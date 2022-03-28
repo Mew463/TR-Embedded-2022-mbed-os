@@ -47,9 +47,31 @@ int multiTurnPositionAngle[8] = {0,0,0,0,0,0,0,0};
 
 class Motor {
 
+    private:
+    /**
+     * @brief Set the desired value of this motor
+     * 
+     * @param value
+     * @return int value
+     */
+    int setDesiredValue(int value){
+        if(motorNumber < 4){
+            motorOut1[motorNumber] = value;
+            return motorOut1[motorNumber];
+        }else if(motorNumber >= 4){
+            motorOut2[motorNumber-4] = value;
+            return motorOut2[motorNumber-4];
+        }
+        return -1;
+    }
+
     public:
 
     int motorNumber;
+
+    int gearRatio = 19;
+
+    /**bool isReversed = false;**/
     
     static char* byteToBits(int x){
         char out[8] = {0,0,0,0,0,0,0,0};
@@ -72,22 +94,15 @@ class Motor {
         motorExists[motorNumber] = 1;
         //TODO Throw error when motorNumber isnt within the range [0,7]
     }
-    
-    /**
-     * @brief Set the desired value of this motor
-     * 
-     * @param value
-     * @return int value
-     */
-    int setDesiredValue(int value){
-        if(motorNumber < 4){
-            motorOut1[motorNumber] = value;
-            return motorOut1[motorNumber];
-        }else if(motorNumber >= 4){
-            motorOut2[motorNumber-4] = value;
-            return motorOut2[motorNumber-4];
-        }
-        return -1;
+
+    Motor(int canNum, int ratio = 19/**, int inverted = false**/)
+    {
+        /**isReversed = inverted;**/
+        gearRatio = ratio;
+        motorNumber = canNum - 1; //Changes range from 1-8 to 0-7
+        totalMotors++;
+        motorExists[motorNumber] = 1;
+        //TODO Throw error when motorNumber isnt within the range [0,7]
     }
 
     void setDesiredCurrent(int value) {
@@ -100,8 +115,13 @@ class Motor {
         mode[motorNumber] = SPEED;
     }
 
+    /**
+     * @brief Set the desired position of this motor in degrees
+     * 
+     * @param value
+     */
     void setDesiredPos(int value) {
-        setDesiredValue(value);
+        setDesiredValue(value * 8191 * gearRatio / 360);
         mode[motorNumber] = POSITION;
     }
     
