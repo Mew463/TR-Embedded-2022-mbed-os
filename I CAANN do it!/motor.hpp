@@ -38,8 +38,6 @@ int16_t motorOut2[4] = {0,0,0,0}; //Second four motors in can, controlled throug
 
 bool motorDebug = 0;
 
-int GearRatio = 1;
-
 CANMsg txMsg; //Message object reused to send messages to motors
 CANMsg rxMsg; //Message object reused to recieve messages from motors
 
@@ -67,12 +65,11 @@ class Motor {
      * 
      * @param canNum is a number from 1-8 signifying which CAN id is attached, blinking LED on motor controller will show this
      */
-    Motor(int canNum, int GearRatio)
+    Motor(int canNum)
     {
         motorNumber = canNum - 1; //Changes range from 1-8 to 0-7
         totalMotors++;
         motorExists[motorNumber] = 1;
-        GearRatio = GearRatio;
         //TODO Throw error when motorNumber isnt within the range [0,7]
     }
     
@@ -222,7 +219,7 @@ class Motor {
      * @return int 
      */
     int getAngle(){
-        return staticAngle(motorNumber);
+        return feedback[motorNumber][0];
     }
 
     int getMultiTurnAngle(){
@@ -230,8 +227,7 @@ class Motor {
     }
 
     static int staticAngle(int motorID){
-        int angle = feedback[motorID][0];
-        return (angle / (8191 * GearRatio));
+        return feedback[motorID][0];
     }
 
     static void multiTurnPositionControl() {

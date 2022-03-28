@@ -4,6 +4,8 @@ int main()
 {
     while (true)
     {
-        printf("%d\n", us_ticker_read());
+        int x = -10040;
+        int16_t y = (int16_t)x;
+        printf("%d\t%d\n", x,y);
     }
 }
