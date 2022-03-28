@@ -38,6 +38,8 @@ int16_t motorOut2[4] = {0,0,0,0}; //Second four motors in can, controlled throug
 
 bool motorDebug = 0;
 
+int GearRatio = 1;
+
 CANMsg txMsg; //Message object reused to send messages to motors
 CANMsg rxMsg; //Message object reused to recieve messages from motors
 
@@ -65,11 +67,12 @@ class Motor {
      * 
      * @param canNum is a number from 1-8 signifying which CAN id is attached, blinking LED on motor controller will show this
      */
-    Motor(int canNum)
+    Motor(int canNum, int GearRatio)
     {
         motorNumber = canNum - 1; //Changes range from 1-8 to 0-7
         totalMotors++;
         motorExists[motorNumber] = 1;
+        GearRatio = GearRatio;
         //TODO Throw error when motorNumber isnt within the range [0,7]
     }
     
@@ -116,9 +119,11 @@ class Motor {
         sumerror[motorID] += error;
         double kP = .1;
         double kI = 0;
-        double kD = .1;
+        double kD = 0;
 
-        if (abs(error) < 5000)
+        //printf("Error: %d \t MTPA: %d \t Desired: %d \t motorout2[5] = %d \t", error, multiTurnPositionAngle[motorID],desiredAngle, motorOut2[0]);
+
+        if (abs(error) < 2500)
             sumerror[motorID] = 0;
 
         int maxsumerror = 2000;
@@ -217,7 +222,7 @@ class Motor {
      * @return int 
      */
     int getAngle(){
-        return feedback[motorNumber][0];
+        return staticAngle(motorNumber);
     }
 
     int getMultiTurnAngle(){
@@ -225,7 +230,8 @@ class Motor {
     }
 
     static int staticAngle(int motorID){
-        return feedback[motorID][0];
+        int angle = feedback[motorID][0];
+        return (angle / (8191 * GearRatio));
     }
 
     static void multiTurnPositionControl() {
@@ -234,7 +240,16 @@ class Motor {
         static int lastMotorAngle[8] = {0,0,0,0,0,0,0,0};
 
         for (int i = 0; i < 7; i++) {
-            if (abs(staticSpeed(i)) > 20) {
+            if (abs(staticSpeed(i)) < 100) {
+                if ( staticAngle(i) > (8191 - Threshold) && lastMotorAngle[i] < Threshold)
+                    multiTurnPositionAngle[i] += -(staticAngle(i) - 8191) - lastMotorAngle[i];
+
+                else if (staticAngle(i) < Threshold && lastMotorAngle[i] > (8191 - Threshold))
+                    multiTurnPositionAngle[i] -= -(staticAngle(i) - 8191) - lastMotorAngle[i];
+                else 
+                    multiTurnPositionAngle[i] += staticAngle(i) - lastMotorAngle[i];
+            }
+            else {
                 int delta = staticAngle(i) - lastMotorAngle[i]; // 0 to 199 POS// 8000 to 128 NEG
                 if(staticSpeed(i) < 0 && delta > 0){ //neg skip
                     multiTurnPositionAngle[i] += (delta - 8191);
@@ -243,15 +258,18 @@ class Motor {
                 }else { //pos no skip or neg no skip same case
                     multiTurnPositionAngle[i] += delta;
                 }
-
-                lastMotorAngle[i] = staticAngle(i);
             }
+            lastMotorAngle[i] = staticAngle(i);
 
         }
       
     }
 
-    static void zeroPos(int motorID) {
+    void zeroPos() {
+        multiTurnPositionAngle[motorNumber] = 0;
+    }
+
+    static void staticZeroPos(int motorID) {
         multiTurnPositionAngle[motorID] = 0;
     }
 
