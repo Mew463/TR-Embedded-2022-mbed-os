@@ -32,9 +32,9 @@ int totalMotors; //total number of motors in play
 
 bool motorExists[8] = {0,0,0,0,0,0,0,0};
 
-int16_t motorOut1[4] = {0,0,0,0}; //First four motors in can, controlled through ID 0x200
+int motorOut1[4] = {0,0,0,0}; //First four motors in can, controlled through ID 0x200
 
-int16_t motorOut2[4] = {0,0,0,0}; //Second four motors in can, controlled through ID 0x1FF
+int motorOut2[4] = {0,0,0,0}; //Second four motors in can, controlled through ID 0x1FF
 
 bool motorDebug = 0;
 
@@ -322,7 +322,7 @@ class Motor {
     static void sendValues(){
         //CAN Sending to the two sending IDs
         if(motorExists[0] || motorExists[1] || motorExists[2] || motorExists[3]){
-            rawSend(sendIDs[0], motorOut1[0], motorOut1[1], motorOut1[2], motorOut1[3]);
+            rawSend(sendIDs[0], (int16_t)motorOut1[0], (int16_t)motorOut1[1], (int16_t)motorOut1[2], (int16_t)motorOut1[3]);
         }
         if(motorExists[4] || motorExists[5] || motorExists[6] || motorExists[7]){
             int16_t outputArray[4] = {0, 0, 0, 0};

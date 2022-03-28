@@ -7,7 +7,7 @@ SerialCommunication Serial(USBTX, USBRX, 9600);
 
 char mycoolmessage[64];
 
-Motor myMotor(5, 19);
+Motor myMotor(5);
 
 int main(){
     motorDebug = 0;
@@ -19,13 +19,12 @@ int main(){
             if(mycoolmessage[0] == 'z'){
                 myMotor.zeroPos();
             }
-            anglu = std::atoi(mycoolmessage);
+            anglu = std::atoi(mycoolmessage) * 8191 * 19 / 360;
             
             myMotor.setDesiredPos(anglu);
         }
         myMotor.update();
-        printf("getangle: %d \n", myMotor.getAngle());
-        //printf("%d\t%d\n",myMotor.getMultiTurnAngle(), std::atoi(mycoolmessage));
+        printf("%d\t%d\n",myMotor.getMultiTurnAngle(), std::atoi(mycoolmessage));
         
     }
 }
