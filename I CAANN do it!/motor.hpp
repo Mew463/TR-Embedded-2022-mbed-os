@@ -72,6 +72,15 @@ class Motor {
     int gearRatio = 19;
 
     /**bool isReversed = false;**/
+    
+    static char* byteToBits(int x){
+        char out[8] = {0,0,0,0,0,0,0,0};
+        for(int i = 0; i < 8; i++){
+            out[8-i] = x & 1;
+            x << 1;
+        }
+        return out;
+    }
 
     /**
      * @brief Construct a new Motor object
@@ -216,6 +225,7 @@ class Motor {
         double kI = 0;
         double kD = 0;
 
+        //printf("Error: %d \t MTPA: %d \t Desired: %d \t motorout2[5] = %d \t", error, multiTurnPositionAngle[motorID],desiredAngle, motorOut2[0]);
 
         if (abs(error) < 2500)
             sumerror[motorID] = 0;
@@ -296,6 +306,9 @@ class Motor {
             }
    
             feedback[motorID][0] = 0 | (recievedBytes[0]<<8) | recievedBytes[1];
+            //printf("Bits: "BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(recievedBytes[0]));
+            //printf(BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(recievedBytes[1]));
+            //printf(" - %d\n", feedback[motorID][0]);
             feedback[motorID][1] = 0 | (recievedBytes[2]<<8) | recievedBytes[3];
             feedback[motorID][2] = 0 | (recievedBytes[4]<<8) | recievedBytes[5];
             feedback[motorID][3] = ((int16_t) recievedBytes[6]);
@@ -304,6 +317,7 @@ class Motor {
 
             //printf("Motor %d:\tAngle (0,8191):%d\tSpeed  ( RPM ):%d\tTorque ( CUR ):%d\tTemperature(C):%d \n",rxMsg.id,feedback[motorID][0],feedback[motorID][1],feedback[motorID][2],feedback[motorID][3]);
         }
+        //CAN Recieving from feedback IDs
     }
 
     static void multiTurnPositionControl() {
