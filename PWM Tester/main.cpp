@@ -4,7 +4,7 @@
 #include "pwmmotor.cpp"
 #include "SerialCommunication.hpp"
 
-PWMMotor brushlessmotor(D13,0.5f);
+PWMMotor brushlessmotor(D5,0.1f);
 
 // Create a BufferedSerial object with a default baud rate.
 SerialCommunication Serial(USBTX, USBRX, 9600);
@@ -16,8 +16,8 @@ int main()
     while (true) {
 
         if (Serial.update(message)) {
-            brushlessmotor.set(atof(message)); //not actually sure whether this works << ples test
-            printf("success");
+            brushlessmotor.set(atof(message)); 
+            printf("success\n");
         }
         
     }

@@ -11,11 +11,11 @@
 CAN             can1(PA_11,PA_12,1000000);
 CAN             can2(PB_12,PB_13,1000000);
 
-static int feedbackIDs[8] = {0x201,0x202,0x203,0x204,0x205,0x206,0x207,0x208}; //IDs to recieve data back from the motors
+static int feedbackIDs[12] = {0x201,0x202,0x203,0x204,0x205,0x206,0x207,0x208,0x209,0x20a,0x20b,0x20c}; //IDs to recieve data back from the motors
 
 static int sendIDs[2] = {0x200,0x1FF}; //IDs to send data
 
-int16_t feedback[8][4] = {{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}}; //Array holding the feedback values of the individual motors
+int16_t feedback[12][4] = {{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}}; //Array holding the feedback values of the individual motors
 
 int totalMotors; //total number of motors in play
 
@@ -265,7 +265,7 @@ class Motor {
             feedback[motorID][2] = 0 | (recievedBytes[4]<<8) | recievedBytes[5];
             feedback[motorID][3] = ((int16_t) recievedBytes[6]);
 
-            //printf("Motor %d:\tAngle (0,8191):%d\tSpeed  ( RPM ):%d\tTorque ( CUR ):%d\tTemperature(C):%d \n",rxMsg.id,feedback[motorID][0],feedback[motorID][1],feedback[motorID][2],feedback[motorID][3]);
+            printf("Motor %d:\tAngle (0,8191):%d\tSpeed  ( RPM ):%d\tTorque ( CUR ):%d\tTemperature(C):%d \n",rxMsg.id,feedback[motorID][0],feedback[motorID][1],feedback[motorID][2],feedback[motorID][3]);
         }
         //CAN Recieving from feedback IDs
     }
