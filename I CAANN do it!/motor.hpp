@@ -11,9 +11,20 @@
 CAN             can1(PA_11,PA_12,1000000);
 CAN             can2(PB_12,PB_13,1000000);
 
+enum motorMode {DISABLED, POSITION, SPEED, CURRENT};
+
+enum motorType {
+    NONE = 0,
+    Standard = 1,
+    C620 = 2,
+    M3508 = 2,
+    Gimbly = 2,
+    GM6020 = 2
+};
+
 static int feedbackIDs[12] = {0x201,0x202,0x203,0x204,0x205,0x206,0x207,0x208,0x209,0x20a,0x20b,0x20c}; //IDs to recieve data back from the motors
 
-static int sendIDs[2] = {0x200,0x1FF}; //IDs to send data
+static int sendIDs[3] = {0x200,0x1FF,0x2FF}; //IDs to send data
 
 int16_t feedback[12][4] = {{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}}; //Array holding the feedback values of the individual motors
 
@@ -27,11 +38,15 @@ int motorOut2[4] = {0,0,0,0}; //Second four motors in can, controlled through ID
 
 bool motorDebug = 0;
 
+motorType types[] = {NONE,NONE,NONE,NONE,NONE,NONE,NONE,NONE};
+
 CANMsg txMsg; //Message object reused to send messages to motors
 CANMsg rxMsg; //Message object reused to recieve messages from motors
 
-enum motorMode {DISABLED, POSITION, SPEED, CURRENT};
 motorMode mode[8] = {DISABLED, DISABLED, DISABLED, DISABLED, DISABLED, DISABLED, DISABLED, DISABLED};
+
+double PIDValues[8][3] = {{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}};
+
 int multiTurnPositionAngle[8] = {0,0,0,0,0,0,0,0};
 
 class Motor {
@@ -69,9 +84,11 @@ class Motor {
      */
     Motor(int canNum)
     {
+        gearRatio = 19;
         motorNumber = canNum - 1; //Changes range from 1-8 to 0-7
         totalMotors++;
         motorExists[motorNumber] = 1;
+        types[motorNumber] = Standard;
         //TODO Throw error when motorNumber isnt within the range [0,7]
     }
 
@@ -82,8 +99,34 @@ class Motor {
         motorNumber = canNum - 1; //Changes range from 1-8 to 0-7
         totalMotors++;
         motorExists[motorNumber] = 1;
+        types[motorNumber] = Standard;
         //TODO Throw error when motorNumber isnt within the range [0,7]
     }
+
+    Motor(int canNum, motorType type = Standard, int ratio = 19/**, int inverted = false**/)
+    {
+        /**isReversed = inverted;**/
+        if(type == GM6020){
+            gearRatio = 1; //TODO FIND THE ACTUAL GEAR RATIO
+            if(canNum <= 4){
+                printf("ERROR. IT IS HIGHLY DISCOURAGED OF YOU TO USE CAN BUSSES 1-4 FOR THE GM6020s. YOU WILL HAVE ERRORS. DO NOT\n");
+            }
+        }else{
+            gearRatio = ratio;
+        }
+        motorNumber = canNum - 1; //Changes range from 1-8 to 0-7
+        totalMotors++;
+        motorExists[motorNumber] = 1;
+        types[motorNumber] = type;
+        //TODO Throw error when motorNumber isnt within the range [0,7]
+    }
+
+    ~Motor(){ //DESTRUCTOR
+        totalMotors --;
+        motorExists[motorNumber] = 0;
+        types[motorNumber] = NONE;
+    }
+    
 
     void setDesiredCurrent(int value) {
         setDesiredValue(value);
@@ -137,7 +180,7 @@ class Motor {
         return feedback[motorID][0];
     }
 
-        void zeroPos() {
+    void zeroPos() {
         multiTurnPositionAngle[motorNumber] = 0;
     }
 
@@ -246,6 +289,9 @@ class Motor {
                 printMsg(rxMsg);
             }
             int motorID = rxMsg.id-0x201;
+            if(motorID >= 8){
+                motorID -= 4;
+            }
             uint8_t recievedBytes[8] = {0,0,0,0,0,0,0,0};
             for(int i = 0;  i < 8; i ++){
                 rxMsg >> recievedBytes[i]; //2 bytes per motor
@@ -258,9 +304,6 @@ class Motor {
             }
    
             feedback[motorID][0] = 0 | (recievedBytes[0]<<8) | recievedBytes[1];
-            //printf("Bits: "BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(recievedBytes[0]));
-            //printf(BYTE_TO_BINARY_PATTERN, BYTE_TO_BINARY(recievedBytes[1]));
-            //printf(" - %d\n", feedback[motorID][0]);
             feedback[motorID][1] = 0 | (recievedBytes[2]<<8) | recievedBytes[3];
             feedback[motorID][2] = 0 | (recievedBytes[4]<<8) | recievedBytes[5];
             feedback[motorID][3] = ((int16_t) recievedBytes[6]);
@@ -323,21 +366,50 @@ class Motor {
     static void sendValues(){
         //CAN Sending to the two sending IDs
         if(motorExists[0] || motorExists[1] || motorExists[2] || motorExists[3]){
-            rawSend(sendIDs[0], (int16_t)motorOut1[0], (int16_t)motorOut1[1], (int16_t)motorOut1[2], (int16_t)motorOut1[3]);
-        }
-        if(motorExists[4] || motorExists[5] || motorExists[6] || motorExists[7]){
             int16_t outputArray[4] = {0, 0, 0, 0};
             for (int i = 0; i < 4; i++) {
-                if (mode[i+4] == DISABLED)
+                if (mode[i] == DISABLED)
                     outputArray[i] = 0;
-                else if (mode[i+4] == POSITION)
-                    outputArray[i] = -PIDPositionError(motorOut2[i], i+4);
-                else if (mode[i+4] == CURRENT) {
-                    outputArray[i] = motorOut2[i];
+                else if (mode[i] == POSITION)
+                    outputArray[i] = -PIDPositionError(motorOut1[i], i);
+                else if (mode[i] == CURRENT) {
+                    outputArray[i] = motorOut1[i];
                 }
             }
 
-            rawSend(sendIDs[1], outputArray[0], outputArray[1], outputArray[2], outputArray[3]);
+            rawSend(sendIDs[0], outputArray[0], outputArray[1], outputArray[2], outputArray[3]);
+        }
+        if(motorExists[4] || motorExists[5] || motorExists[6] || motorExists[7]){
+            int16_t outputArray[4] = {0, 0, 0, 0};
+            int16_t outputArrayGM6020[4] = {0, 0, 0, 0};
+            bool doSend[2] = {false,false};
+            for (int i = 0; i < 4; i++) {
+                if(types[i+4] == Standard){
+                    if (mode[i+4] == DISABLED){
+                        outputArray[i] = 0;
+                    }else if (mode[i+4] == POSITION){
+                        outputArray[i] = -PIDPositionError(motorOut2[i], i+4);
+                        doSend[0] = true;
+                    }else if (mode[i+4] == CURRENT) {
+                        outputArray[i] = motorOut2[i];
+                        doSend[0] = true;
+                    }
+                }else if(types[i+4] == GM6020){
+                    if (mode[i+4] == DISABLED){
+                        outputArrayGM6020[i] = 0;
+                    }else if (mode[i+4] == POSITION){
+                        outputArrayGM6020[i] = -PIDPositionError(motorOut2[i], i+4);
+                        doSend[1] = true;
+                    }else if (mode[i+4] == CURRENT) {
+                        outputArrayGM6020[i] = motorOut2[i];
+                        doSend[1] = true;
+                    }
+                }
+            }
+            if(doSend[0])
+                rawSend(sendIDs[1], outputArray[0], outputArray[1], outputArray[2], outputArray[3]);
+            if(doSend[1])
+                rawSend(sendIDs[2], outputArrayGM6020[0], outputArrayGM6020[1], outputArrayGM6020[2], outputArrayGM6020[3]);
         }
     }
 

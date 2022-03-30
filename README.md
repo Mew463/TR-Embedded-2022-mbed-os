@@ -1,5 +1,9 @@
 # TO DO
 
+- Make sure gimblies still work
+
+- Figure out the actual Gimbly Encoder Gear Ratio
+
 - Add capabilities to have each motor have their own PID values
 
 - PID position control for gimbals
