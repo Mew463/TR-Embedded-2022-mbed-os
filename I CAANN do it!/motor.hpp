@@ -4,17 +4,6 @@
 #define motor_hpp
 #include "CANMsg.h"
 
-#define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
-#define BYTE_TO_BINARY(byte)  \
-  (byte & 0x80 ? '1' : '0'), \
-  (byte & 0x40 ? '1' : '0'), \
-  (byte & 0x20 ? '1' : '0'), \
-  (byte & 0x10 ? '1' : '0'), \
-  (byte & 0x08 ? '1' : '0'), \
-  (byte & 0x04 ? '1' : '0'), \
-  (byte & 0x02 ? '1' : '0'), \
-  (byte & 0x01 ? '1' : '0')
-
 //////////////////////////////////////////////
 //VERY IMPORTANT TO SET FREQUENCY HERE AND NOW
 //////////////////////////////////////////////
@@ -72,15 +61,6 @@ class Motor {
     int gearRatio = 19;
 
     /**bool isReversed = false;**/
-    
-    static char* byteToBits(int x){
-        char out[8] = {0,0,0,0,0,0,0,0};
-        for(int i = 0; i < 8; i++){
-            out[8-i] = x & 1;
-            x << 1;
-        }
-        return out;
-    }
 
     /**
      * @brief Construct a new Motor object
@@ -124,6 +104,79 @@ class Motor {
         setDesiredValue(value * 8191 * gearRatio / 360);
         mode[motorNumber] = POSITION;
     }
+
+    /**
+     * @brief Get the desired value of the motor
+     * 
+     * @return int value
+     */
+    int getDesiredValue(){
+        if(motorNumber < 4){
+            return motorOut1[motorNumber];
+        }else if(motorNumber >= 4){
+            return motorOut2[motorNumber-4];
+        }
+        return -1;
+    }
+
+    
+    /**
+     * @brief Returns angle of motor
+     * 
+     * @return int 
+     */
+    int getAngle(){
+        return feedback[motorNumber][0];
+    }
+
+    int getMultiTurnAngle(){
+        return multiTurnPositionAngle[motorNumber];
+    }
+
+    static int staticAngle(int motorID){
+        return feedback[motorID][0];
+    }
+
+        void zeroPos() {
+        multiTurnPositionAngle[motorNumber] = 0;
+    }
+
+    static void staticZeroPos(int motorID) {
+        multiTurnPositionAngle[motorID] = 0;
+    }
+
+    /**
+     * @brief Returns speed of motor
+     * 
+     * @return int 
+     */
+    int getSpeed(){
+        return feedback[motorNumber][1];
+    }
+
+    static int staticSpeed(int motorID) {
+        return feedback[motorID][1];
+    }
+
+    /**
+     * @brief Returns torque of motor
+     * 
+     * @return int 
+     */
+    int getTorque(){
+        return feedback[motorNumber][2];
+    }
+
+    /**
+     * @brief Returns temperature of motor
+     * 
+     * @return int 
+     */
+    int getTemperature(){
+        return feedback[motorNumber][3];
+    }
+
+
     
     static int PIDPositionError(int desiredAngle, int motorID) {
         int error = multiTurnPositionAngle[motorID] - desiredAngle;
@@ -138,7 +191,6 @@ class Motor {
         double kI = 0;
         double kD = 0;
 
-        //printf("Error: %d \t MTPA: %d \t Desired: %d \t motorout2[5] = %d \t", error, multiTurnPositionAngle[motorID],desiredAngle, motorOut2[0]);
 
         if (abs(error) < 2500)
             sumerror[motorID] = 0;
@@ -165,21 +217,6 @@ class Motor {
         return PIDCalc;
     }
     
-
-    /**
-     * @brief Get the desired value of the motor
-     * 
-     * @return int value
-     */
-    int getDesiredValue(){
-        if(motorNumber < 4){
-            return motorOut1[motorNumber];
-        }else if(motorNumber >= 4){
-            return motorOut2[motorNumber-4];
-        }
-        return -1;
-    }
-
     /**
      * @brief Prints a CANMessage nicely
      * 
@@ -233,23 +270,6 @@ class Motor {
         //CAN Recieving from feedback IDs
     }
 
-    /**
-     * @brief Returns angle of motor
-     * 
-     * @return int 
-     */
-    int getAngle(){
-        return feedback[motorNumber][0];
-    }
-
-    int getMultiTurnAngle(){
-        return multiTurnPositionAngle[motorNumber];
-    }
-
-    static int staticAngle(int motorID){
-        return feedback[motorID][0];
-    }
-
     static void multiTurnPositionControl() {
         int Threshold = 3000;
 
@@ -279,45 +299,6 @@ class Motor {
 
         }
       
-    }
-
-    void zeroPos() {
-        multiTurnPositionAngle[motorNumber] = 0;
-    }
-
-    static void staticZeroPos(int motorID) {
-        multiTurnPositionAngle[motorID] = 0;
-    }
-
-    /**
-     * @brief Returns speed of motor
-     * 
-     * @return int 
-     */
-    int getSpeed(){
-        return feedback[motorNumber][1];
-    }
-
-    static int staticSpeed(int motorID) {
-        return feedback[motorID][1];
-    }
-
-    /**
-     * @brief Returns torque of motor
-     * 
-     * @return int 
-     */
-    int getTorque(){
-        return feedback[motorNumber][2];
-    }
-
-    /**
-     * @brief Returns temperature of motor
-     * 
-     * @return int 
-     */
-    int getTemperature(){
-        return feedback[motorNumber][3];
     }
 
     /**
