@@ -261,6 +261,18 @@ class Motor {
     }
 
     /**
+     * @brief Prints a Motor-returned CANMessage nicelyier
+     * 
+     * @param msg 
+     */
+    static void printMotorData(int mID, int data){
+        for(int i = 0; i < (mID + 1);i++){
+            printf("\t");
+        }
+        printf("M%d=%d\n",mID,data);
+    }
+
+    /**
      * @brief Get feedback back from the motor
      * 
      */
@@ -287,6 +299,8 @@ class Motor {
             feedback[motorID][1] = 0 | (recievedBytes[2]<<8) | recievedBytes[3];
             feedback[motorID][2] = 0 | (recievedBytes[4]<<8) | recievedBytes[5];
             feedback[motorID][3] = ((int16_t) recievedBytes[6]);
+
+            printMotorData(rxMsg.id-0x200, feedback[motorID][0]);
 
             //printf("Motor %d:\tAngle (0,8191):%d\tSpeed  ( RPM ):%d\tTorque ( CUR ):%d\tTemperature(C):%d \n",rxMsg.id,feedback[motorID][0],feedback[motorID][1],feedback[motorID][2],feedback[motorID][3]);
         }
@@ -361,16 +375,16 @@ class Motor {
      */
     static void rawSend(int id, int data1, int data2, int data3, int data4){
         txMsg.clear(); // clear Tx message storage
-        //txMsg.format = CANStandard;
-        //txMsg.type = CANData; 
+        txMsg.format = CANExtended;
+        txMsg.type = CANData; 
         txMsg.id = id; 
 
         int motorSending[4] = {data1,data2,data3,data4};
 
         int8_t sentBytes1[8] = {0,0,0,0,0,0,0,0};
         for(int i = 0; i < 4;  i ++){
-            sentBytes1[(2*i)+1] = motorSending[i] & (0xFF);
-            sentBytes1[2*i] = (motorSending[i] >> 8) & (0xFF);
+            sentBytes1[(2*i)+1] = motorSending[i];
+            sentBytes1[2*i] = (motorSending[i] >> 8);
         }
         for(int i = 0;  i < 8; i ++){
             txMsg << sentBytes1[i]; //2 bytes per motor
