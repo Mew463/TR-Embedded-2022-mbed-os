@@ -19,7 +19,7 @@ int main(){
                 myMotor.zeroPos();
             }
             
-            myMotor.setDesiredCurrent(std::atoi(mycoolmessage));
+            myMotor.setDesiredPos(std::atoi(mycoolmessage));
         }
         myMotor.update();
         printf("%d\t%d\n",myMotor.getMultiTurnAngle(), std::atoi(mycoolmessage));

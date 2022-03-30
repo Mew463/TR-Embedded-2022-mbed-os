@@ -105,28 +105,18 @@ class Motor {
         //TODO Throw error when motorNumber isnt within the range [0,7]
     }
 
-    /**
-     * @brief Set the desired current of this motor from -16000 -> 16000
-     * 
-     * @param value
-     */
     void setDesiredCurrent(int value) {
         setDesiredValue(value);
         mode[motorNumber] = CURRENT;
     }
 
-    /**
-     * @brief Set the desired speed of this motor
-     * 
-     * @param value
-     */
     void setDesiredSpeed(int value) {
         setDesiredValue(value);
         mode[motorNumber] = SPEED;
     }
 
     /**
-     * @brief Set the desired position of this motor in degrees from -inf -> inf
+     * @brief Set the desired position of this motor in degrees
      * 
      * @param value
      */
@@ -135,83 +125,6 @@ class Motor {
         mode[motorNumber] = POSITION;
     }
     
-    void zeroPos() {
-        multiTurnPositionAngle[motorNumber] = 0;
-    }
-
-    static void staticZeroPos(int motorID) {
-        multiTurnPositionAngle[motorID] = 0;
-    }
-
-    /**
-     * @brief Returns speed of motor
-     * 
-     * @return int 
-     */
-    int getSpeed(){
-        return feedback[motorNumber][1];
-    }
-
-    static int staticSpeed(int motorID) {
-        return feedback[motorID][1];
-    }
-
-    /**
-     * @brief Returns temperature of motor
-     * 
-     * @return int 
-     */
-    int getTemperature(){
-        return feedback[motorNumber][3];
-    }
-
-    /**
-     * @brief Returns specified data of specified motor
-     * canBuss is a field between 1 and 8, specifing the can bus of the motor
-     * dataNumber is the element of data you want
-     * Angle: 0
-     * Speed: 1
-     * Torque: 2
-     * Temperature: 3
-     * 
-     * @return int 
-     */
-    static int getData(int canBus, int dataNumber){
-        return feedback[canBus -1][dataNumber];
-    }
-
-    /**
-     * @brief Get the desired value of the motor
-     * 
-     * @return int value
-     */
-    int getDesiredValue(){
-        if(motorNumber < 4){
-            return motorOut1[motorNumber];
-        }else if(motorNumber >= 4){
-            return motorOut2[motorNumber-4];
-        }
-        return -1;
-    }
-
-    /**
-     * @brief Returns angle of motor
-     * 
-     * @return int 
-     */
-    int getAngle(){
-        return feedback[motorNumber][0];
-    }
-
-    int getMultiTurnAngle(){
-        return multiTurnPositionAngle[motorNumber];
-    }
-
-    static int staticAngle(int motorID){
-        return feedback[motorID][0];
-    }
-
-
     static int PIDPositionError(int desiredAngle, int motorID) {
         int error = multiTurnPositionAngle[motorID] - desiredAngle;
         static unsigned long lastTime[8] = {0};
@@ -251,7 +164,21 @@ class Motor {
 
         return PIDCalc;
     }
+    
 
+    /**
+     * @brief Get the desired value of the motor
+     * 
+     * @return int value
+     */
+    int getDesiredValue(){
+        if(motorNumber < 4){
+            return motorOut1[motorNumber];
+        }else if(motorNumber >= 4){
+            return motorOut2[motorNumber-4];
+        }
+        return -1;
+    }
 
     /**
      * @brief Prints a CANMessage nicely
@@ -268,18 +195,6 @@ class Motor {
         for (int i = 0; i < msg.len; i++)
             printf(" 0x%.2X", msg.data[i]);
         printf("\r\n");
-    }
-
-    /**
-     * @brief Prints a Motor-returned CANMessage nicelyier
-     * 
-     * @param msg 
-     */
-    static void printMotorData(int mID, int data){
-        for(int i = 0; i < (mID + 1);i++){
-            printf("\t");
-        }
-        printf("M%d=%d\n",mID,data);
     }
 
     /**
@@ -313,11 +228,26 @@ class Motor {
             feedback[motorID][2] = 0 | (recievedBytes[4]<<8) | recievedBytes[5];
             feedback[motorID][3] = ((int16_t) recievedBytes[6]);
 
-            printMotorData(rxMsg.id-0x200, feedback[motorID][0]);
-
             //printf("Motor %d:\tAngle (0,8191):%d\tSpeed  ( RPM ):%d\tTorque ( CUR ):%d\tTemperature(C):%d \n",rxMsg.id,feedback[motorID][0],feedback[motorID][1],feedback[motorID][2],feedback[motorID][3]);
         }
         //CAN Recieving from feedback IDs
+    }
+
+    /**
+     * @brief Returns angle of motor
+     * 
+     * @return int 
+     */
+    int getAngle(){
+        return feedback[motorNumber][0];
+    }
+
+    int getMultiTurnAngle(){
+        return multiTurnPositionAngle[motorNumber];
+    }
+
+    static int staticAngle(int motorID){
+        return feedback[motorID][0];
     }
 
     static void multiTurnPositionControl() {
@@ -351,7 +281,59 @@ class Motor {
       
     }
 
-    
+    void zeroPos() {
+        multiTurnPositionAngle[motorNumber] = 0;
+    }
+
+    static void staticZeroPos(int motorID) {
+        multiTurnPositionAngle[motorID] = 0;
+    }
+
+    /**
+     * @brief Returns speed of motor
+     * 
+     * @return int 
+     */
+    int getSpeed(){
+        return feedback[motorNumber][1];
+    }
+
+    static int staticSpeed(int motorID) {
+        return feedback[motorID][1];
+    }
+
+    /**
+     * @brief Returns torque of motor
+     * 
+     * @return int 
+     */
+    int getTorque(){
+        return feedback[motorNumber][2];
+    }
+
+    /**
+     * @brief Returns temperature of motor
+     * 
+     * @return int 
+     */
+    int getTemperature(){
+        return feedback[motorNumber][3];
+    }
+
+    /**
+     * @brief Returns specified data of specified motor
+     * canBuss is a field between 1 and 8, specifing the can bus of the motor
+     * dataNumber is the element of data you want
+     * Angle: 0
+     * Speed: 1
+     * Torque: 2
+     * Temperature: 3
+     * 
+     * @return int 
+     */
+    static int getData(int canBus, int dataNumber){
+        return feedback[canBus -1][dataNumber];
+    }
 
     /**
      * @brief send all motor values after setting them in setDesiredValues
@@ -389,16 +371,16 @@ class Motor {
      */
     static void rawSend(int id, int data1, int data2, int data3, int data4){
         txMsg.clear(); // clear Tx message storage
-        txMsg.format = CANExtended;
-        txMsg.type = CANData; 
+        //txMsg.format = CANStandard;
+        //txMsg.type = CANData; 
         txMsg.id = id; 
 
         int motorSending[4] = {data1,data2,data3,data4};
 
         int8_t sentBytes1[8] = {0,0,0,0,0,0,0,0};
         for(int i = 0; i < 4;  i ++){
-            sentBytes1[(2*i)+1] = motorSending[i];
-            sentBytes1[2*i] = (motorSending[i] >> 8);
+            sentBytes1[(2*i)+1] = motorSending[i] & (0xFF);
+            sentBytes1[2*i] = (motorSending[i] >> 8) & (0xFF);
         }
         for(int i = 0;  i < 8; i ++){
             txMsg << sentBytes1[i]; //2 bytes per motor
