@@ -1,12 +1,18 @@
 # TO DO
 
-- Make Gimblies work 
+- Add capabilities to have each motor have their own PID values
 
-- Velocity PID control 
+- PID position control for gimbals
 
-- Reverse
+- Velocity PID control for M3508 Motor
+
+- Reverse functionality
 
 - Tune PID Position Control
 
-- Instead of two MotorOut Arrays, Make there only one 
+- Instead of two MotorOut Arrays, Make there only one!!
+
+- Grab more can wires so we can test multiple motors at once 
+
+- 
 
