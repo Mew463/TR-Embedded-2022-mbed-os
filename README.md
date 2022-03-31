@@ -4,11 +4,11 @@
 
 - Figure out the actual Gimbly Encoder Gear Ratio
 
-- Add capabilities to have each motor have their own PID values
+- Add capabilities to have each motor have their own PID values - WRITTEN BUT UNTESTED
 
-- Make a function to convert an int to 4 byte data and vise-versa
+- Make a function to convert an int to 4 byte data and vise-versa - WRITTEN BUT UNTESTED
 
-- PID position control for gimbals
+- PID position control for gimbals - WRITTEN BUT UNTESTED
 
 - Velocity PID control for M3508 Motor
 
