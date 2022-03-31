@@ -45,7 +45,8 @@ CANMsg rxMsg; //Message object reused to recieve messages from motors
 
 motorMode mode[8] = {DISABLED, DISABLED, DISABLED, DISABLED, DISABLED, DISABLED, DISABLED, DISABLED};
 
-double PIDValues[8][3] = {{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}};
+double PIDValuesPosition[8][3] = {{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}};
+double PIDValuesSpeed[8][3] = {{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}};
 
 int multiTurnPositionAngle[8] = {0,0,0,0,0,0,0,0};
 
@@ -219,7 +220,17 @@ class Motor {
         return feedback[motorNumber][3];
     }
 
+    void setPositionPID(double Kp, double Ki, double Kd){
+        PIDValuesPosition[motorNumber][0] = Kp;
+        PIDValuesPosition[motorNumber][1] = Ki;
+        PIDValuesPosition[motorNumber][2] = Kd;
+    }
 
+    void setSpeedPID(double Kp, double Ki, double Kd){
+        PIDValuesSpeed[motorNumber][0] = Kp;
+        PIDValuesSpeed[motorNumber][1] = Ki;
+        PIDValuesSpeed[motorNumber][2] = Kd;
+    }
     
     static int PIDPositionError(int desiredAngle, int motorID) {
         int error = multiTurnPositionAngle[motorID] - desiredAngle;
