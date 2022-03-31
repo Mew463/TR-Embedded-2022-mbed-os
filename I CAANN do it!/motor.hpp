@@ -232,6 +232,27 @@ class Motor {
         PIDValuesSpeed[motorNumber][2] = Kd;
     }
     
+    /**
+     * @brief turns an int to four bytes
+     * 
+     * @param n an int
+     * @return an array of four unsigned bytes in the form of int8_ts
+     */
+    uint8_t* intToBytes(int n){
+        uint8_t out[4] = {(uint8_t)(n >> 24),(uint8_t)(n >> 16),(uint8_t)(n >> 8),(uint8_t)n};
+        return out;
+    }
+
+    /**
+     * @brief turns four bytes into an int
+     * 
+     * @param bytes array of four unsigned bytes
+     * @return an int
+     */
+    int bytesToInt(uint8_t bytes[4]){
+        return (int)((bytes[0] << 24) + (bytes[1] << 16) + (bytes[2] << 8) + (bytes[3]));
+    } 
+
     static int PIDPositionError(int desiredAngle, int motorID) {
         int error = multiTurnPositionAngle[motorID] - desiredAngle;
         static unsigned long lastTime[8] = {0};
@@ -241,9 +262,9 @@ class Motor {
         static int lastError[8] = {0};
         static int sumerror[8] = {0};
         sumerror[motorID] += error;
-        double kP = .1;
-        double kI = 0;
-        double kD = 0;
+        double kP = PIDValuesPosition[motorID][0];
+        double kI = PIDValuesPosition[motorID][1];
+        double kD = PIDValuesPosition[motorID][2];
 
 
         if (abs(error) < 2500)
