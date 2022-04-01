@@ -253,6 +253,27 @@ class Motor {
         return (int)((bytes[0] << 24) + (bytes[1] << 16) + (bytes[2] << 8) + (bytes[3]));
     } 
 
+    /**
+     * @brief turns an int to two bytes
+     * 
+     * @param n an int
+     * @return an array of two unsigned bytes (int8_ts)
+     */
+    uint8_t* int16ToBytes(int n){
+        uint8_t out[2] = {(uint8_t)(n >> 8),(uint8_t)n};
+        return out;
+    }
+
+    /**
+     * @brief turns two bytes into an int
+     * 
+     * @param bytes array of two unsigned bytes (int8_ts)
+     * @return an int
+     */
+    int bytesToInt16(uint8_t bytes[2]){
+        return (int)((bytes[2] << 8) + (bytes[3]));
+    } 
+
     static int PIDPositionError(int desiredAngle, int motorID) {
         int error = multiTurnPositionAngle[motorID] - desiredAngle;
         static unsigned long lastTime[8] = {0};
