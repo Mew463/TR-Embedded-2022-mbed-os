@@ -15,10 +15,10 @@ enum motorMode {DISABLED, POSITION, SPEED, CURRENT};
 
 enum motorType {
     NONE = 0,
-    Standard = 1,
-    C620 = 2,
-    M3508 = 2,
-    Gimbly = 2,
+    STANDARD = 1,
+    C620 = 1,
+    M3508 = 1,
+    GIMBLY = 2,
     GM6020 = 2
 };
 
@@ -76,7 +76,7 @@ class Motor {
 
     int gearRatio = 19;
 
-    /**bool isReversed = false;**/
+    bool isInverted = false;
 
     /**
      * @brief Construct a new Motor object
@@ -89,24 +89,24 @@ class Motor {
         motorNumber = canNum - 1; //Changes range from 1-8 to 0-7
         totalMotors++;
         motorExists[motorNumber] = 1;
-        types[motorNumber] = Standard;
+        types[motorNumber] = STANDARD;
         //TODO Throw error when motorNumber isnt within the range [0,7]
     }
 
-    Motor(int canNum, int ratio = 19/**, int inverted = false**/)
+    Motor(int canNum, int ratio = 19, int inverted = false)
     {
-        /**isReversed = inverted;**/
+        isInverted = inverted;
         gearRatio = ratio;
         motorNumber = canNum - 1; //Changes range from 1-8 to 0-7
         totalMotors++;
         motorExists[motorNumber] = 1;
-        types[motorNumber] = Standard;
+        types[motorNumber] = STANDARD;
         //TODO Throw error when motorNumber isnt within the range [0,7]
     }
 
-    Motor(int canNum, motorType type = Standard, int ratio = 19/**, int inverted = false**/)
+    Motor(int canNum, motorType type = STANDARD, int ratio = 19, int inverted = false)
     {
-        /**isReversed = inverted;**/
+        isInverted = inverted;
         if(type == GM6020){
             gearRatio = 1; //TODO FIND THE ACTUAL GEAR RATIO
             if(canNum <= 4){
@@ -130,6 +130,8 @@ class Motor {
     
 
     void setDesiredCurrent(int value) {
+        if (isInverted)
+            value = -value;
         setDesiredValue(value);
         mode[motorNumber] = CURRENT;
     }
@@ -298,9 +300,12 @@ class Motor {
         else if (sumerror[motorID] < -maxsumerror)
             sumerror[motorID] = -maxsumerror;   
 
+        
     
         int PIDCalc = kP * error + kI * sumerror[motorID] + kD * ((double)(error - lastError[motorID])/timeDifference);
-
+        
+        printf("PIDCALC: %d\n",PIDCalc);
+        
         int maxcurrent = 1000;
         if (PIDCalc > maxcurrent)
             PIDCalc = maxcurrent;
@@ -361,7 +366,7 @@ class Motor {
             feedback[motorID][2] = 0 | (recievedBytes[4]<<8) | recievedBytes[5];
             feedback[motorID][3] = ((int16_t) recievedBytes[6]);
 
-            printf("Motor %d:\tAngle (0,8191):%d\tSpeed  ( RPM ):%d\tTorque ( CUR ):%d\tTemperature(C):%d \n",rxMsg.id,feedback[motorID][0],feedback[motorID][1],feedback[motorID][2],feedback[motorID][3]);
+            //printf("Motor 0x%x:\tAngle (0,8191):%d\tSpeed  ( RPM ):%d\tTorque ( CUR ):%d\tTemperature(C):%d \n",rxMsg.id,feedback[motorID][0],feedback[motorID][1],feedback[motorID][2],feedback[motorID][3]);
         }
         //CAN Recieving from feedback IDs
     }
@@ -437,7 +442,7 @@ class Motor {
             int16_t outputArrayGM6020[4] = {0, 0, 0, 0};
             bool doSend[2] = {false,false};
             for (int i = 0; i < 4; i++) {
-                if(types[i+4] == Standard){
+                if(types[i+4] == STANDARD){
                     if (mode[i+4] == DISABLED){
                         outputArray[i] = 0;
                     }else if (mode[i+4] == POSITION){
@@ -451,6 +456,7 @@ class Motor {
                     if (mode[i+4] == DISABLED){
                         outputArrayGM6020[i] = 0;
                     }else if (mode[i+4] == POSITION){
+                        //printf("Poes:%d\n",motorOut2[i]);
                         outputArrayGM6020[i] = -PIDPositionError(motorOut2[i], i+4);
                         doSend[1] = true;
                     }else if (mode[i+4] == CURRENT) {
@@ -491,6 +497,7 @@ class Motor {
         for(int i = 0;  i < 8; i ++){
             txMsg << sentBytes1[i]; //2 bytes per motor
         }
+        printf("");
         if (can1.write(txMsg)) {
             // transmit message
             if(motorDebug){
@@ -501,7 +508,7 @@ class Motor {
             }
         }
         else{
-            printf("Transmission error\r\n");
+            //printf("Transmission error\n");
             //break; //TODO AT SOME POINT REMOVE THIs WHEN A TRANSMISSION ERROR ISNT CATASTROPHIC
         }
     }

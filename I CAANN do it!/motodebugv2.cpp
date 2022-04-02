@@ -26,7 +26,12 @@
 // }
 
 // int main(void) {
+
+//     //Motor::rawSend(0x2FF,0,0,8000,0);
+//     int motorVals[4] = {0,0,0,0};
+//     int sendId = 0;
 //     while (1) {
+        
 //         if (Serial.update(mycoolmessage)) {
 //             firstChar = mycoolmessage[0];
 //             switch(firstChar) {
@@ -77,7 +82,6 @@
 //                     break;
 //             }
 //             printf("Controlling Motor#%d\n",motorNum);
-//             int sendId = 0;
 //             if(!gimbly){ //standard motors
 //                 if(motorNum > 0 && motorNum <= 4){
 //                     sendId = 0x200;
@@ -91,15 +95,16 @@
 //                     sendId = 0x2FF;
 //                 }
 //             }
-//             int motorVals[4] = {0,0,0,0};
+            
 //             motorVals[(motorNum -1) % 4] = motorVal;
+//             printf("%d sendID: %x\n", motorVals[(motorNum - 1) % 4], sendId);
 
-//             Motor::rawSend(sendId,motorVals[0],motorVals[1],motorVals[2],motorVals[3]);
 //             if(feedbackMode){
 //                 Motor::getFeedback();
-//                 printf()
 //             }
 //         }
+//         Motor::rawSend(sendId,motorVals[0],motorVals[1],motorVals[2],motorVals[3]);
+//         Motor::update();
 //     }
 
 
