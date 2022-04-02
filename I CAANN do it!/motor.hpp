@@ -40,12 +40,12 @@ bool motorDebug = 0;
 
 motorType types[] = {NONE,NONE,NONE,NONE,NONE,NONE,NONE,NONE};
 
-CANMsg txMsg; //Message object reused to send messages to motors
+CANMsg txMsg(0x000,CANStandard); //Message object reused to send messages to motors
 CANMsg rxMsg; //Message object reused to recieve messages from motors
 
 motorMode mode[8] = {DISABLED, DISABLED, DISABLED, DISABLED, DISABLED, DISABLED, DISABLED, DISABLED};
 
-double PIDValuesPosition[8][3] = {{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}};
+double PIDValuesPosition[8][3] = {{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0}};
 double PIDValuesSpeed[8][3] = {{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}};
 
 int multiTurnPositionAngle[8] = {0,0,0,0,0,0,0,0};
@@ -304,9 +304,9 @@ class Motor {
     
         int PIDCalc = kP * error + kI * sumerror[motorID] + kD * ((double)(error - lastError[motorID])/timeDifference);
         
-        printf("PIDCALC: %d\n",PIDCalc);
+        //printf("PIDCALC: %d\n",PIDCalc);
         
-        int maxcurrent = 1000;
+        int maxcurrent = 20000;
         if (PIDCalc > maxcurrent)
             PIDCalc = maxcurrent;
         else if (PIDCalc < -maxcurrent)
@@ -497,8 +497,13 @@ class Motor {
         for(int i = 0;  i < 8; i ++){
             txMsg << sentBytes1[i]; //2 bytes per motor
         }
-        printf("");
-        if (can1.write(txMsg)) {
+        //printf(".");
+        bool isWrite = 1;
+        isWrite = can1.write(txMsg);
+        //printf("Bool:%d\n",isWrite);
+        //isWrite = 1;
+        printf("Erpr:%d\n", can1.tderror());
+        if (isWrite) {
             // transmit message
             if(motorDebug){
                 printf("-------------------------------------\r\n");
@@ -507,9 +512,11 @@ class Motor {
                 printMsg(txMsg);
             }
         }
-        else{
+        else if(isWrite == 0){
             //printf("Transmission error\n");
             //break; //TODO AT SOME POINT REMOVE THIs WHEN A TRANSMISSION ERROR ISNT CATASTROPHIC
+        }else{
+            printf("???????????????????\n");
         }
     }
 
