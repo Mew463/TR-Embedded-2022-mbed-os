@@ -21,6 +21,7 @@
 
 // int main(){
 //     motorDebug = 0;
+//     Motor motorrrrrr(1,STANDARD);
 //     Motor gimbalii(7,GIMBLY);
 //     gimbalii.setPositionPID(5, 0, 10);
 //     int val = 0;
@@ -31,6 +32,7 @@
 //                 printf("Set position to %d\n",val);
 //             }
 //         }
+//         motorrrrrr.setDesiredCurrent(1000);
 //         gimbalii.setDesiredPos(val);
 //         Motor::update();
 //         //Motor::rawSend(0x202, val, val, val, val);

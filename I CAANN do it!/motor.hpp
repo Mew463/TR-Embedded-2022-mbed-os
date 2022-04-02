@@ -502,7 +502,7 @@ class Motor {
         isWrite = can1.write(txMsg);
         //printf("Bool:%d\n",isWrite);
         //isWrite = 1;
-        printf("Erpr:%d\n", can1.tderror());
+        //printf("Erpr:%d\n", can1.tderror());
         if (isWrite) {
             // transmit message
             if(motorDebug){
