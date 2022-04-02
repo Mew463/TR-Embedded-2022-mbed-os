@@ -46,7 +46,7 @@ CANMsg rxMsg; //Message object reused to recieve messages from motors
 motorMode mode[8] = {DISABLED, DISABLED, DISABLED, DISABLED, DISABLED, DISABLED, DISABLED, DISABLED};
 
 double PIDValuesPosition[8][3] = {{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0}};
-double PIDValuesSpeed[8][3] = {{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}};
+double PIDValuesSpeed[8][3] = {{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0}};
 
 int multiTurnPositionAngle[8] = {0,0,0,0,0,0,0,0};
 
@@ -317,6 +317,48 @@ class Motor {
 
         return PIDCalc;
     }
+
+    static int PIDSpeedError(int desiredSpeed, int motorID) {
+        int error = staticSpeed(motorID) - desiredSpeed;
+        static unsigned long lastTime[8] = {0};
+        unsigned long Time = us_ticker_read() / 1000;
+        unsigned long timeDifference = Time - lastTime[motorID];
+
+        static int lastError[8] = {0};
+        static int sumerror[8] = {0};
+        sumerror[motorID] += error;
+        double kP = PIDValuesSpeed[motorID][0];
+        double kI = PIDValuesSpeed[motorID][1];
+        double kD = PIDValuesSpeed[motorID][2];
+
+
+        if (abs(error) < 2500)
+            sumerror[motorID] = 0;
+
+        int maxsumerror = 2000;
+
+        if (sumerror[motorID] > maxsumerror)
+            sumerror[motorID] = maxsumerror;
+        else if (sumerror[motorID] < -maxsumerror)
+            sumerror[motorID] = -maxsumerror;   
+
+        
+    
+        int PIDCalc = kP * error + kI * sumerror[motorID] + kD * ((double)(error - lastError[motorID])/timeDifference);
+        
+        printf("PIDCALC: %d\n",PIDCalc);
+        
+        int maxcurrent = 5000;
+        if (PIDCalc > maxcurrent)
+            PIDCalc = maxcurrent;
+        else if (PIDCalc < -maxcurrent)
+            PIDCalc = -maxcurrent;
+
+        lastTime[motorID] = Time;
+        error = lastError[motorID];
+
+        return PIDCalc;
+    }
     
     /**
      * @brief Prints a CANMessage nicely
@@ -430,6 +472,8 @@ class Motor {
                     outputArray[i] = 0;
                 else if (mode[i] == POSITION)
                     outputArray[i] = -PIDPositionError(motorOut1[i], i);
+                else if (mode[i] == SPEED)
+                    outputArray[i] += -PIDSpeedError(motorOut1[i], i);
                 else if (mode[i] == CURRENT) {
                     outputArray[i] = motorOut1[i];
                 }
@@ -448,6 +492,9 @@ class Motor {
                     }else if (mode[i+4] == POSITION){
                         outputArray[i] = -PIDPositionError(motorOut2[i], i+4);
                         doSend[0] = true;
+                    }else if (mode[i+4] == SPEED){
+                        outputArray[i] += -PIDSpeedError(motorOut2[i], i+4);
+                        doSend[0] = true;
                     }else if (mode[i+4] == CURRENT) {
                         outputArray[i] = motorOut2[i];
                         doSend[0] = true;
@@ -455,6 +502,11 @@ class Motor {
                 }else if(types[i+4] == GM6020){
                     if (mode[i+4] == DISABLED){
                         outputArrayGM6020[i] = 0;
+                    }else if (mode[i+4] == SPEED){
+                        //printf("Poes:%d\n",motorOut2[i]);
+                        outputArrayGM6020[i] += -PIDSpeedError(motorOut2[i], i+4);
+                        printf("\t\t\t\tCurrent given:%d\n",outputArrayGM6020[i]);
+                        doSend[1] = true;
                     }else if (mode[i+4] == POSITION){
                         //printf("Poes:%d\n",motorOut2[i]);
                         outputArrayGM6020[i] = -PIDPositionError(motorOut2[i], i+4);
