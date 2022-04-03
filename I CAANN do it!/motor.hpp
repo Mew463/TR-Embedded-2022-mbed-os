@@ -576,10 +576,18 @@ class Motor {
      * @brief Function that should be called by the user every tick, runs necessary elements for CAN motors to work.
      * 
      */
-    static void update(){
+    static void tick(){
         getFeedback();
         multiTurnPositionControl();
         sendValues();
+    }
+
+    /**
+     * @brief equivalent to tick
+     * 
+     */
+    static void update(){
+        tick();
     }
 
 
