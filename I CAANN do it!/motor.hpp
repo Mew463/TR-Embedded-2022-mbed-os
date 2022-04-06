@@ -26,29 +26,29 @@ static int feedbackIDs[12] = {0x201,0x202,0x203,0x204,0x205,0x206,0x207,0x208,0x
 
 static int sendIDs[3] = {0x200,0x1FF,0x2FF}; //IDs to send data
 
-int16_t feedback[12][4] = {{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}}; //Array holding the feedback values of the individual motors
+static int16_t feedback[12][4] = {{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0},{0,0,0,0}}; //Array holding the feedback values of the individual motors
 
-int totalMotors; //total number of motors in play
+static int totalMotors; //total number of motors in play
 
-bool motorExists[8] = {0,0,0,0,0,0,0,0};
+static bool motorExists[8] = {0,0,0,0,0,0,0,0};
 
-int motorOut1[4] = {0,0,0,0}; //First four motors in can, controlled through ID 0x200
+static int motorOut1[4] = {0,0,0,0}; //First four motors in can, controlled through ID 0x200
 
-int motorOut2[4] = {0,0,0,0}; //Second four motors in can, controlled through ID 0x1FF
+static int motorOut2[4] = {0,0,0,0}; //Second four motors in can, controlled through ID 0x1FF
 
-bool motorDebug = 0;
+static bool motorDebug = 0;
 
-motorType types[] = {NONE,NONE,NONE,NONE,NONE,NONE,NONE,NONE};
+static motorType types[] = {NONE,NONE,NONE,NONE,NONE,NONE,NONE,NONE};
 
-CANMsg txMsg(0x000,CANStandard); //Message object reused to send messages to motors
-CANMsg rxMsg; //Message object reused to recieve messages from motors
+static CANMsg txMsg(0x000,CANStandard); //Message object reused to send messages to motors
+static CANMsg rxMsg; //Message object reused to recieve messages from motors
 
-motorMode mode[8] = {DISABLED, DISABLED, DISABLED, DISABLED, DISABLED, DISABLED, DISABLED, DISABLED};
+static motorMode mode[8] = {DISABLED, DISABLED, DISABLED, DISABLED, DISABLED, DISABLED, DISABLED, DISABLED};
 
-double PIDValuesPosition[8][3] = {{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0}};
-double PIDValuesSpeed[8][3] = {{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0}};
+static double PIDValuesPosition[8][3] = {{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0}};
+static double PIDValuesSpeed[8][3] = {{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0}};
 
-int multiTurnPositionAngle[8] = {0,0,0,0,0,0,0,0};
+static int multiTurnPositionAngle[8] = {0,0,0,0,0,0,0,0};
 
 class Motor {
 
