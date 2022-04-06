@@ -50,7 +50,7 @@ static double PIDValuesSpeed[8][3] = {{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1,0,0},{1
 
 static int multiTurnPositionAngle[8] = {0,0,0,0,0,0,0,0};
 
-class Motor {
+class CanMotor {
 
     private:
     /**
@@ -83,7 +83,7 @@ class Motor {
      * 
      * @param canNum is a number from 1-8 signifying which CAN id is attached, blinking LED on motor controller will show this
      */
-    Motor(int canNum)
+    CanMotor(int canNum)
     {
         gearRatio = 19;
         motorNumber = canNum - 1; //Changes range from 1-8 to 0-7
@@ -93,7 +93,7 @@ class Motor {
         //TODO Throw error when motorNumber isnt within the range [0,7]
     }
 
-    Motor(int canNum, int ratio = 19, int inverted = false)
+    CanMotor(int canNum, int ratio = 19, int inverted = false)
     {
         isInverted = inverted;
         gearRatio = ratio;
@@ -104,7 +104,7 @@ class Motor {
         //TODO Throw error when motorNumber isnt within the range [0,7]
     }
 
-    Motor(int canNum, motorType type = STANDARD, int ratio = 19, int inverted = false)
+    CanMotor(int canNum, motorType type = STANDARD, int ratio = 19, int inverted = false)
     {
         isInverted = inverted;
         if(type == GM6020){
@@ -122,7 +122,7 @@ class Motor {
         //TODO Throw error when motorNumber isnt within the range [0,7]
     }
 
-    ~Motor(){ //DESTRUCTOR
+    ~CanMotor(){ //DESTRUCTOR
         totalMotors --;
         motorExists[motorNumber] = 0;
         types[motorNumber] = NONE;
