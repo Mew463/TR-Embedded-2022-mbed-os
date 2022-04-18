@@ -1,13 +1,7 @@
-/*
- * Copyright (c) 2020 Arm Limited and affiliates.
- * SPDX-License-Identifier: Apache-2.0
- */
-
 #include "mbed.h"
-#include <iostream>
-#include "SerialCommunication.hpp"
+#include "../TR-mbed6/util/communications/SerialCommunication.hpp"
 
-SerialCommunication Serial(A0, A1, 9600);
+SerialCommunication Serial(USBTX, USBRX, 9600);
 
 char mycoolmessage[64];
 
@@ -15,8 +9,13 @@ int main() {
 
   while (1) {
         
-        if (Serial.update(mycoolmessage))
+        if (Serial.update(mycoolmessage)) {
             printf("your new messsage: %s\n", mycoolmessage);
+
+            if (Serial.toNum(mycoolmessage) != NULL) 
+                printf("message as an int: %d\n", Serial.toNum(mycoolmessage));
+            
+        }
 
     }
 

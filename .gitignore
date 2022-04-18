@@ -2,3 +2,10 @@
 *.lnk
 *.url
 mbed-os
+.build
+.mbed
+projectfiles
+*.py*
+BUILD
+mbed-os.lib
+TR-mbed6

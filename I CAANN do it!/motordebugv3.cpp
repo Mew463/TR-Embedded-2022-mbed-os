@@ -1,36 +1,65 @@
-// #include "mbed.h"
-// #include "SerialCommunication.hpp"
-// #include "motor.hpp"
-// #include <cctype>
-// #include "CANMsg.h"
+#include "mbed.h"
+#include "../TR-mbed6/util/communications/SerialCommunication.hpp"
+#include "../TR-mbed6/util/motor/motor.hpp"
+#include "../TR-mbed6/util/communications/canHandler.hpp"
+#include "CANMsg.h"
 
-// // Canname | MotorType
-// Motor testMotor(1, C620);
+CANHandler canPorts(PA_11,PA_12,PB_12,PB_13);
 
-// SerialCommunication Serial(USBTX, USBRX, 9600);
-// char mycoolmessage[64];
+// Motor IDCanname | MotorType
+Motor testMotor(5, CANHandler::CANBUS_1, GIMBLY);
+Motor testMotor2(4, CANHandler::CANBUS_1, C620);
+
+SerialCommunication Serial(USBTX, USBRX, 9600);
+char mycoolmessage[64];
 
 
-// bool isNum(char message[]) {
-//     int i = 0;
-//     if(message[0] == '-')
-//         i = 1;
-//     while(message[i] != '\0') {
 
-//         if (!isdigit(message[i]))
-//             return false;
-//         i++;
-//     }
-//     return true;
-// }
 
-// int main(void) {
-//     while (1) {
+int main(void) {
+    testMotor.setPositionOutputCap(8000);
+    
+    testMotor.setSpeedOutputCap(15000);
+    testMotor.setSpeedIntegralCap(1000);
+
+    testMotor2.setPositionPID(.20, 0, 10);
+    testMotor2.setPositionOutputCap(1000);
+
+    testMotor2.setSpeedPID(.5, .2, 7);
+    testMotor2.setSpeedIntegralCap(400);
+    testMotor2.setSpeedOutputCap(1000);
+
+    Motor::setCANHandler(&canPorts);
+
+    testMotor.zeroPos();
+
+    int val = 0;
+    
+    while (1) {
         
-//         if (Serial.update(mycoolmessage) & isNum(mycoolmessage)) {
-//             testMotor.setDesiredCurrent(std::atoi(mycoolmessage));
-//         }
-//         Motor::update();
-//     }
+        if (Serial.update(mycoolmessage)) {
+            val = Serial.toNum(mycoolmessage);
+            testMotor2.setDesiredPos(val);
+            printf("sucessfullyl set\n");
+        }
+    
+    }
 
-// }
+}
+
+
+
+
+bool checkJam(Motor *mymotor) {
+    static int mycount = 0;
+
+    if (mymotor->getData(TORQUE) > 300 && mymotor->getData(VELOCITY) == 0) 
+        mycount++;
+    else
+        mycount = 0;
+    
+    if (mycount > 10)
+        return true;
+    else
+        return false;
+}

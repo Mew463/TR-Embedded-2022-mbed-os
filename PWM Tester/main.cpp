@@ -1,10 +1,9 @@
 #include "mbed.h"
 #include "stdlib.h"
-#include <string.h>
-#include "pwmmotor.cpp"
-#include "SerialCommunication.hpp"
+#include "../TR-mbed6/util/motor/pwmmotor.cpp"
+#include "../TR-mbed6/util/communications/SerialCommunication.hpp"
 
-PWMMotor brushlessmotor(D5,0.1f);
+PWMMotor brushlessmotor(D12, 90);
 
 // Create a BufferedSerial object with a default baud rate.
 SerialCommunication Serial(USBTX, USBRX, 9600);
@@ -16,7 +15,7 @@ int main()
     while (true) {
 
         if (Serial.update(message)) {
-            brushlessmotor.set(atof(message)); 
+            brushlessmotor.set(Serial.toNum(message));
             printf("success\n");
         }
         

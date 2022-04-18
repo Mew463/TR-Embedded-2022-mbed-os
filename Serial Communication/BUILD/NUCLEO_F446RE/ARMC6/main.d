@@ -315,4 +315,4 @@ BUILD\NUCLEO_F446RE\ARMC6\main.o: main.cpp \
   mbed-os\platform\include\platform\mbed_stats.h \
   mbed-os\platform\include\platform\Stream.h \
   mbed-os\platform\include\platform\FileLike.h \
-  mbed-os\drivers\include\drivers\SerialCommunication.hpp
+  ..\TR-mbed6\util\communications\SerialCommunication.hpp
